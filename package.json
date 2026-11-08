@@ -10,8 +10,12 @@
   "devEngines": {
     "packageManager": {
       "name": "nub",
-      "version": "^0.9.7",
+      "version": "^0.10.0",
       "onFail": "error"
     }
-  }
+  },
+  "engines": {
+    "node": ">=26"
+  },
+  "packageManager": "nub@0.10.0"
 }
