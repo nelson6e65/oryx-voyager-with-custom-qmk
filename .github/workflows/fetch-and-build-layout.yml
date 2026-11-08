@@ -87,7 +87,7 @@ jobs:
           git config --local user.name "github-actions"
           git config --local user.email "github-actions@github.com"
           git add .
-          printf "✨(oryx): %s\n" "$CHANGE_DESCRIPTION" | git commit -F - || echo "No layout change"
+          printf "feat(oryx): %s\n" "$CHANGE_DESCRIPTION" | git commit -F - || echo "No layout change"
           git push
 
       - name: Merge Oryx with custom QMK
@@ -105,7 +105,7 @@ jobs:
           git submodule update --init --recursive
           cd ..
           git add qmk_firmware
-          git commit -m "✨(qmk): Update firmware" || echo "No QMK change"
+          git commit -m "build(qmk): update ZSA's QMK firmware" || echo "No QMK change"
           git push
 
       - name: Build qmk docker image
