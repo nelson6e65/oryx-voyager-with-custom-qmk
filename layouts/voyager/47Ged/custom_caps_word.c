@@ -1,31 +1,33 @@
 // Copyright 2026 Nelson Martell
 // SPDX-License-Identifier: MIT
 //
-// Caps Word adaptado al layout del SO, con indicador RGB.
+// Caps Word adapted to the operating system's keyboard layout, with an RGB
+// indicator.
 //
-// Oryx no genera este archivo: vive solo en la rama main, así que cada
-// sincronización con Oryx puede reescribir keymap.c sin tocarlo. El código no
-// depende de las capas del layout, solo de la configuración de abajo, y se
-// puede copiar tal cual a cualquier otro layout.
+// Oryx does not generate this file. It lives only on the main branch, so each
+// sync with Oryx can rewrite keymap.c without touching it. The code does not
+// depend on the layout's layers, only on the settings below, and can be copied
+// as is to any other layout.
 //
-// Uso: añade estas líneas al inicio de rules.mk (la línea OPT_DEFS solo hace
-// falta si el SO no está en QWERTY):
+// Usage: add these lines at the top of rules.mk (the OPT_DEFS line is only
+// needed if the operating system does not use QWERTY):
 //
 //     SRC += custom_caps_word.c
 //     OPT_DEFS += -DCW_OS_LAYOUT=CW_OS_SWITCH_BY_LAYER -DCW_OS_QWERTY_LAYER=1
 //
-// Qué hace:
+// What it does:
 //
-//  1. Distingue los keycodes según el layout del SO. Con el SO en Colemak o
-//     Colemak-DH, la «o» sale de KC_SCLN y el «;» de KC_P. Sin este ajuste,
-//     Caps Word se apagaría al escribir la «o» y convertiría el «;» en «:».
+//  1. Treats keycodes according to the operating system's layout. With the
+//     operating system in Colemak or Colemak-DH, "o" comes from KC_SCLN and
+//     ";" from KC_P. Without this, Caps Word would turn off when typing "o" and
+//     would turn ";" into ":".
 //
-//  2. Mientras Caps Word está activo, pinta cada tecla según su efecto. Las
-//     teclas apagadas desactivan Caps Word al pulsarlas.
+//  2. While Caps Word is on, lights up each key by what it does. Most keys
+//     left dark turn Caps Word off when pressed; layer keys do not.
 //
-// Caps Word es para identificadores y constantes (MI_CONSTANTE), así que solo
-// considera las letras de la A a la Z. AltGr (Ñ, vocales con tilde) y las tap
-// dances lo desactivan.
+// Caps Word is for identifiers and constants (MY_CONSTANT), so it only takes
+// the letters A to Z into account. Tap dances turn it off. In this layout, that
+// includes AltGr, which types Ñ and accented vowels.
 
 #include QMK_KEYBOARD_H
 #include "keymap_introspection.h" // combo_count(), combo_get()
@@ -34,18 +36,20 @@
 #endif
 
 // ---------------------------------------------------------------------------
-// Configuración
+// Settings
 // ---------------------------------------------------------------------------
 
-// Layout del SO (CW_OS_LAYOUT):
+// Operating system layout (CW_OS_LAYOUT):
 //
-//   CW_OS_QWERTY           SO en US QWERTY. Es el comportamiento estándar de
-//                          QMK y el valor por defecto.
-//   CW_OS_COLEMAK          SO siempre en US Colemak o Colemak-DH.
-//   CW_OS_SWITCH_BY_LAYER  SO en Colemak, salvo cuando está activa la capa
-//                          CW_OS_QWERTY_LAYER: la que se usa con el SO en US
-//                          QWERTY. Ojo: Oryx renumera las capas si se borran
-//                          o reordenan, así que hay que revisar el número.
+//   CW_OS_QWERTY           The operating system uses US QWERTY. This is QMK's
+//                          standard behavior and the default.
+//   CW_OS_COLEMAK          The operating system always uses US Colemak or
+//                          Colemak-DH.
+//   CW_OS_SWITCH_BY_LAYER  The operating system uses Colemak, except while
+//                          layer CW_OS_QWERTY_LAYER is on: the layer used with
+//                          the operating system in US QWERTY. Note: Oryx
+//                          renumbers the layers when they are deleted or
+//                          reordered, so check the number after such changes.
 #define CW_OS_QWERTY 0
 #define CW_OS_COLEMAK 1
 #define CW_OS_SWITCH_BY_LAYER 2
@@ -56,31 +60,31 @@
 
 #if CW_OS_LAYOUT == CW_OS_SWITCH_BY_LAYER
 #    ifndef CW_OS_QWERTY_LAYER
-#        error "CW_OS_SWITCH_BY_LAYER requiere definir CW_OS_QWERTY_LAYER (la capa que se usa con el SO en US QWERTY)."
+#        error "CW_OS_SWITCH_BY_LAYER requires CW_OS_QWERTY_LAYER (the layer used with the operating system in US QWERTY)."
 #    endif
 #elif CW_OS_LAYOUT != CW_OS_QWERTY && CW_OS_LAYOUT != CW_OS_COLEMAK
-#    error "CW_OS_LAYOUT debe ser CW_OS_QWERTY, CW_OS_COLEMAK o CW_OS_SWITCH_BY_LAYER."
+#    error "CW_OS_LAYOUT must be CW_OS_QWERTY, CW_OS_COLEMAK or CW_OS_SWITCH_BY_LAYER."
 #endif
 
-// Colores en HSV (0-255). El brillo final se escala con el brillo global.
+// Colors in HSV (0-255). The final brightness scales with the global brightness.
 #ifndef CW_COLOR_SHIFTED
-#    define CW_COLOR_SHIFTED {85, 255, 255} // verde: se envían con Shift (letras; «-» pasa a «_»)
+#    define CW_COLOR_SHIFTED {85, 255, 255} // green: sent with Shift (letters; "-" becomes "_")
 #endif
 #ifndef CW_COLOR_KEEPS
-#    define CW_COLOR_KEEPS {128, 255, 255} // cian: no cambian y mantienen Caps Word (números, Backspace, Delete)
+#    define CW_COLOR_KEEPS {128, 255, 255} // cyan: unchanged, keep Caps Word on (numbers, Backspace, Delete)
 #endif
 #ifndef CW_COLOR_EXIT
-#    define CW_COLOR_EXIT {0, 255, 255} // rojo: teclas del combo que activa/desactiva Caps Word
+#    define CW_COLOR_EXIT {0, 255, 255} // red: keys of the combo that toggles Caps Word
 #endif
 
 // ---------------------------------------------------------------------------
-// Lógica de Caps Word
+// Caps Word logic
 // ---------------------------------------------------------------------------
 
 typedef enum {
-    CW_KEY_BREAKS,  // desactiva Caps Word
-    CW_KEY_SHIFTED, // continúa y se envía con Shift
-    CW_KEY_KEEPS,   // continúa y se envía sin Shift
+    CW_KEY_BREAKS,  // turns Caps Word off
+    CW_KEY_SHIFTED, // keeps Caps Word on and is sent with Shift
+    CW_KEY_KEEPS,   // keeps Caps Word on and is sent without Shift
 } cw_key_t;
 
 static bool os_in_colemak(void) {
@@ -94,11 +98,11 @@ static bool os_in_colemak(void) {
 }
 
 static cw_key_t cw_classify(uint16_t keycode) {
-    // Teclas cuyo carácter depende del layout del SO.
-    if (keycode == KC_SCLN) { // Colemak: «o»   QWERTY: «;»
+    // Keys whose character depends on the operating system's layout.
+    if (keycode == KC_SCLN) { // Colemak: "o"   QWERTY: ";"
         return os_in_colemak() ? CW_KEY_SHIFTED : CW_KEY_BREAKS;
     }
-    if (keycode == KC_P) { // Colemak: «;»   QWERTY: «p»
+    if (keycode == KC_P) { // Colemak: ";"   QWERTY: "p"
         return os_in_colemak() ? CW_KEY_BREAKS : CW_KEY_SHIFTED;
     }
 
@@ -133,7 +137,7 @@ bool caps_word_press_user(uint16_t keycode) {
 }
 
 // ---------------------------------------------------------------------------
-// Indicador RGB
+// RGB indicator
 // ---------------------------------------------------------------------------
 
 #ifdef RGB_MATRIX_ENABLE
@@ -164,7 +168,7 @@ static HSV cw_key_color(uint16_t keycode) {
         return (HSV)CW_COLOR_EXIT;
     }
 
-    // En mod-tap y layer-tap, a Caps Word le importa la acción al tocar.
+    // For mod-tap and layer-tap keys, Caps Word cares about the tap action.
     if (IS_QK_MOD_TAP(keycode)) {
         keycode = QK_MOD_TAP_GET_TAP_KEYCODE(keycode);
     } else if (IS_QK_LAYER_TAP(keycode)) {
@@ -186,15 +190,15 @@ bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
         return true;
     }
 #    ifdef ORYX_ENABLE
-    // Keymapp/Oryx está controlando los LEDs en este momento.
+    // Keymapp or Oryx is controlling the LEDs right now.
     if (rawhid_state.rgb_control) {
         return true;
     }
 #    endif
 
-    // keymap.c (Oryx) pinta los colores de la capa en rgb_matrix_indicators_user(),
-    // que corre una vez por cuadro, justo antes de la llamada a esta función para
-    // el último bloque de LEDs. En ese momento repintamos el teclado completo.
+    // keymap.c (Oryx) paints the layer colors in rgb_matrix_indicators_user(),
+    // which runs once per frame, right before this function is called for the
+    // last chunk of LEDs. Repaint the whole keyboard at that point.
     if (led_max < RGB_MATRIX_LED_COUNT) {
         return true;
     }
@@ -208,8 +212,8 @@ bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
                 continue;
             }
 
-            // Keycode efectivo en esta posición, resolviendo las teclas
-            // transparentes de las capas activas.
+            // Effective keycode at this position, resolving the transparent
+            // keys of the active layers.
             const keypos_t pos     = {.row = row, .col = col};
             const uint16_t keycode = keymap_key_to_keycode(layer_switch_get_layer(pos), pos);
 
