@@ -78,7 +78,8 @@ layers and combos. That folder holds two kinds of files:
 Two branches keep them apart:
 
 - `oryx` holds the source as Oryx generates it, formatted with oxfmt (see
-  [Formatting](#formatting)). Only the workflow commits to it.
+  [Linting and formatting](CONTRIBUTING.md#linting-and-formatting)). Only the
+  workflow commits to it.
 - `main` holds the custom code and gets the Oryx changes by merging `oryx`.
 
 Git applies each Oryx change on top of the custom code. To keep those merges
@@ -94,7 +95,9 @@ free of conflicts:
 To change the layout:
 
 1. Edit it in Oryx and click **Compile this layout**. The text in **Some notes
-   about what you changed** becomes the commit message.
+   about what you changed** becomes the subject of the commit, after
+   `feat(oryx): ` (see
+   [Commits from the workflow](CONTRIBUTING.md#commits-from-the-workflow)).
 2. Run the **Fetch and build layout** workflow from the
    [Oryx Chrome extension](https://chromewebstore.google.com/detail/oryx-extension/bocjciklgnhkejkdfilcikhjfbmbcjal),
    from the **Actions** tab or from the terminal.
@@ -102,36 +105,25 @@ To change the layout:
 
 To change the custom code:
 
-1. Edit it on `main`.
-2. Build and flash the firmware to test it:
+1. Create a branch off `main`.
+2. Edit the code, then build and flash the firmware to test it:
 
    ```bash
    scripts/build.sh
    zapp flash build/zsa_voyager_47Ged.bin
    ```
 
-3. Commit and push.
+3. Commit, push the branch and open a pull request.
+4. Merge it with a merge commit.
 
 See [Building the firmware](docs/building.md) and
 [Flashing the firmware](docs/flashing.md) for the details.
 
-## Formatting
+## Contributing
 
-[oxfmt](https://www.npmjs.com/package/oxfmt) formats the Markdown, YAML and
-JSON files:
-
-```bash
-nub install
-nub run format        # format the files
-nub run format:check  # only check them
-```
-
-The files that Oryx generates are formatted too. The workflow formats them before
-it commits them to `oryx`, with the oxfmt version in `package.json`, so `oryx`
-and `main` always share the same formatting and merges stay free of conflicts.
-Only `keymap.json` changes, because oxfmt does not format C or Makefiles.
-
-`.oxfmtrc.json` leaves out only `build/`, where the firmware is built.
+The conventions for code, formatting, commits, branches and pull requests are in
+[CONTRIBUTING.md](CONTRIBUTING.md). `nub install` installs the tooling and the
+git hooks that check them.
 
 ## Updating from the template
 
