@@ -1,0 +1,74 @@
+name: Checks
+
+# Checks each pull request: its commits follow Conventional Commits (see
+# commitlint.config.ts and CONTRIBUTING.md), and the repository passes oxlint,
+# with its type check, and oxfmt.
+#
+# Pull requests merge with a merge commit, so their commits reach main as they
+# are: one that fails here has to be rewritten on the branch. Merge commits are
+# not checked, because commitlint ignores them.
+on:
+  pull_request:
+    # `edited` covers a change of base branch, which changes the range of
+    # commits.
+    types:
+      - opened
+      - edited
+      - reopened
+      - synchronize
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  commits:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          # The whole history, to walk from the base to the head.
+          fetch-depth: 0
+
+      - name: Setup nub
+        uses: nubjs/setup-nub@v0
+        with:
+          # The exact release in `packageManager`: setup-nub resolves a range
+          # with npm, which `devEngines` refuses to run in this repository.
+          nub-version: "0.10.0"
+          cache: true
+
+      - name: Install deps
+        run: nub install --frozen-lockfile
+
+      - name: Lint the commits
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: nubx commitlint --from "$BASE_SHA" --to "$HEAD_SHA" --verbose
+
+  lint:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup nub
+        uses: nubjs/setup-nub@v0
+        with:
+          # The exact release in `packageManager`: setup-nub resolves a range
+          # with npm, which `devEngines` refuses to run in this repository.
+          nub-version: "0.10.0"
+          cache: true
+
+      - name: Install deps
+        run: nub install --frozen-lockfile
+
+      - name: Lint and check the formatting
+        run: nub run lint
