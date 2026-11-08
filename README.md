@@ -131,7 +131,7 @@ it commits them to `oryx`, with the oxfmt version in `package.json`, so `oryx`
 and `main` always share the same formatting and merges stay free of conflicts.
 Only `keymap.json` changes, because oxfmt does not format C or Makefiles.
 
-`.oxfmtrc.json` leaves out the workflow, which comes from the template.
+`.oxfmtrc.json` leaves out only `build/`, where the firmware is built.
 
 ## Updating from the template
 
