@@ -1,17 +1,35 @@
 {
   "private": true,
+  "type": "module",
   "scripts": {
-    "format": "oxfmt",
-    "format:check": "oxfmt --check"
+    "prepare": "is-ci || husky",
+    "lint": "nub run lint:code && nub run lint:format",
+    "lint:code": "oxlint",
+    "lint:format": "oxfmt --check",
+    "fix:all": "oxlint --fix && oxfmt",
+    "fix:format": "oxfmt"
   },
   "devDependencies": {
-    "oxfmt": "^0.77.0"
+    "@commitlint/cli": "^21.2.4",
+    "@commitlint/config-conventional": "^21.2.4",
+    "@commitlint/types": "^21.2.3",
+    "@types/node": "^26.6.6",
+    "husky": "^9.1.7",
+    "is-ci": "^4.1.0",
+    "lint-staged": "^17.6.0",
+    "oxfmt": "^0.77.0",
+    "oxlint": "^1.92.0",
+    "oxlint-tsgolint": "^7.0.2006"
   },
   "devEngines": {
     "packageManager": {
       "name": "nub",
-      "version": "^0.9.7",
+      "version": "^0.10.0",
       "onFail": "error"
     }
-  }
+  },
+  "engines": {
+    "node": ">=26"
+  },
+  "packageManager": "nub@0.10.0"
 }
