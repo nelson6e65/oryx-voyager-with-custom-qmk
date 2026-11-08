@@ -1,2 +1,30 @@
-.idea
+# Firmware compilado y artefactos de builds locales
+build/
+.build/
+*.bin
+*.hex
+*.uf2
+*.elf
+
+# Descargas de Oryx (el workflow solo conserva la carpeta del layout)
+source.zip
+*_source/
+
+# Herramientas de C (clangd, base de datos de compilación)
+compile_commands.json
+.cache/
+
+# Dependencias de Node (solo herramientas de formato)
+node_modules/
+
+# Editores e IDEs
+.idea/
 *.iml
+.vscode/
+*.swp
+*~
+
+# Archivos del sistema operativo
+.DS_Store
+Thumbs.db
+.directory
