@@ -68,6 +68,18 @@ jobs:
           unzip -oj source.zip '*_source/*' -d "${LAYOUT_DIRECTORY}"
           rm source.zip
 
+      - name: Format the Oryx source
+        run: |
+          # Use the oxfmt version from main's package.json, so oryx and main share
+          # the same formatting and merges stay free of conflicts.
+          git fetch origin main
+          oxfmt_version="$(git show FETCH_HEAD:package.json 2>/dev/null | jq -r '.devDependencies.oxfmt // empty')"
+          if [[ -z "${oxfmt_version}" ]]; then
+            echo "main has no oxfmt in package.json, so the Oryx source stays as generated."
+            exit 0
+          fi
+          npx --yes "oxfmt@${oxfmt_version}" "${LAYOUT_DIRECTORY}"
+
       - name: Commit and Push changes
         env:
           CHANGE_DESCRIPTION: ${{ steps.download-layout-source.outputs.change_description }}

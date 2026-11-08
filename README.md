@@ -77,8 +77,8 @@ layers and combos. That folder holds two kinds of files:
 
 Two branches keep them apart:
 
-- `oryx` holds the source exactly as Oryx generates it. Only the workflow
-  commits to it.
+- `oryx` holds the source as Oryx generates it, formatted with oxfmt (see
+  [Formatting](#formatting)). Only the workflow commits to it.
 - `main` holds the custom code and gets the Oryx changes by merging `oryx`.
 
 Git applies each Oryx change on top of the custom code. To keep those merges
@@ -86,7 +86,7 @@ free of conflicts:
 
 - Put custom code in separate files, and add lines only at the top of
   `rules.mk`, away from the lines that Oryx generates.
-- Do not edit or format the files that Oryx generates.
+- Do not edit the files that Oryx generates. Change the layout in Oryx instead.
 - Do not rewrite the published history of `oryx` or `main`.
 
 ## Day-to-day use
@@ -126,8 +126,12 @@ nub run format        # format the files
 nub run format:check  # only check them
 ```
 
-`.oxfmtrc.json` leaves out the files that Oryx generates and the workflow, which
-comes from the template.
+The files that Oryx generates are formatted too. The workflow formats them before
+it commits them to `oryx`, with the oxfmt version in `package.json`, so `oryx`
+and `main` always share the same formatting and merges stay free of conflicts.
+Only `keymap.json` changes, because oxfmt does not format C or Makefiles.
+
+`.oxfmtrc.json` leaves out the workflow, which comes from the template.
 
 ## Updating from the template
 
