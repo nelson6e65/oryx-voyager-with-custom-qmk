@@ -6,7 +6,7 @@ on:
       layout_id:
         description: "Layout id available in URL https://configure.zsa.io/voyager/layouts/[ID_IS_HERE]/latest"
         required: true
-        default: "g7jjw"
+        default: "47Ged"
       layout_geometry:
         description: "Keyboard type"
         type: choice
@@ -40,6 +40,12 @@ jobs:
       - name: Download the full history for the merge to work correctly
         run: git pull --unshallow
 
+      - name: Set layout directory
+        run: |
+          # Layouts live in layouts/<keyboard>/<layout_id>, e.g. layouts/voyager/47Ged
+          normalized_layout_geometry="$(echo "${{ github.event.inputs.layout_geometry }}" | sed 's/\//_/g')"
+          echo "LAYOUT_DIRECTORY=layouts/${normalized_layout_geometry}/${{ github.event.inputs.layout_id }}" >> "$GITHUB_ENV"
+
       - name: Download layout source
         id: download-layout-source
         run: |
@@ -58,7 +64,8 @@ jobs:
 
       - name: Unzip the source file
         run: |
-          unzip -oj source.zip '*_source/*' -d ${{ github.event.inputs.layout_id }}
+          mkdir -p "${LAYOUT_DIRECTORY}"
+          unzip -oj source.zip '*_source/*' -d "${LAYOUT_DIRECTORY}"
           rm source.zip
 
       - name: Commit and Push changes
@@ -106,7 +113,7 @@ jobs:
           
           # Copy layout files to the qmk folder
           rm -rf ${keyboard_directory}/${{ github.event.inputs.layout_geometry }}/keymaps/${{ github.event.inputs.layout_id }}
-          mkdir -p ${keyboard_directory}/${{ github.event.inputs.layout_geometry }}/keymaps && cp -r ${{ github.event.inputs.layout_id }} "$_"
+          mkdir -p ${keyboard_directory}/${{ github.event.inputs.layout_geometry }}/keymaps && cp -r "${LAYOUT_DIRECTORY}" "$_"
           
           # Build the layout
           docker run -v ./qmk_firmware:/root --rm qmk /bin/sh -c "
